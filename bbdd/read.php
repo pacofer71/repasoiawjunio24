@@ -39,6 +39,9 @@ $articulos = mysqli_query($llave, $q);
                 <th>
                     STOCK
                 </th>
+                <th>
+                    ACCIONES
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -57,6 +60,15 @@ $articulos = mysqli_query($llave, $q);
                     </td>
                     <td>
                         {$fila['stock']}
+                    </td>
+                    <td>
+                        <form action='borrar.php' method='POST'>
+                            <input type='hidden' name='articulo_id' value='{$fila['id']}' />
+                            <button type="button">
+                                <a href="update.php?articulo_id={$fila['id']}" style="text-decoration:none">Edit</a>
+                            </button>
+                            <button type="submit" onclick="return confirm('¿Desea borrar el articulo?');">Borrar</button>
+                        </form>
                     </td>
                 </tr>
                 TXT;

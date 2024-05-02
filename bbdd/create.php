@@ -21,7 +21,26 @@
         if(strlen($nombre)<5 || strlen($nombre)>50){
             $errores=true;
             $_SESSION['errNombre']="*** Error el nombre debe tener entre 5 y 50 caracteres.";
+        }else{
+            //comprobaremos que $nombre NO existe en la BB de Datos
+            require_once __DIR__."/conexion/miconexion.php";
+            $q="select * from articulos where nombre=?";
+            $stmt=mysqli_stmt_init($llave);
+            mysqli_stmt_prepare($stmt, $q);
+            mysqli_stmt_bind_param($stmt, 's', $nombre);
+            mysqli_stmt_execute($stmt);
+            //Almacenamos el resultado
+            mysqli_stmt_store_result($stmt);
+            if(mysqli_stmt_num_rows($stmt)>0){
+                $errores=true;
+                $_SESSION['errNombre']="*** Error el nombre artículo $nombre YA existe";
+                mysqli_stmt_close($stmt);
+                mysqli_close($llave);
+            }else{
+                mysqli_stmt_close($stmt);
+            }
         }
+
         if(strlen($descripcion)<10 || strlen($descripcion)>150){
             $errores=true;
             $_SESSION['errDescripcion']="*** Error la descripcion debe tener entre 10 y 150 caracteres.";
@@ -35,7 +54,7 @@
             die();
         }
         //Guardaremos los datos
-        require_once __DIR__."/conexion/miconexion.php";
+        
         $q="insert into articulos(nombre, descripcion, stock) values(?, ?, ?)";
         $stmt=mysqli_stmt_init($llave);
         mysqli_stmt_prepare($stmt, $q);
