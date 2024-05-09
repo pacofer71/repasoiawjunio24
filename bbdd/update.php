@@ -35,58 +35,58 @@ if (!mysqli_stmt_fetch($stmt)) {
     header("Location:read.php");
     die();
 }
-if(isset($_POST['btn_env'])){
+if (isset($_POST['btn_env'])) {
     //recojo y limpio los datos
-    $nombre=htmlspecialchars(trim($_POST['nombre']));
-    $descripcion=htmlspecialchars(trim($_POST['descripcion']));
-    $stock= (int) htmlspecialchars(trim($_POST['stock']));
-     //Hacemos las validaciones
-     $errores=false;
-        
-     if(strlen($nombre)<5 || strlen($nombre)>50){
-         $errores=true;
-         $_SESSION['errNombre']="*** Error el nombre debe tener entre 5 y 50 caracteres.";
-     }else{
-         //comprobaremos que $nombre NO existe en la BB de Datos
-         require_once __DIR__."/conexion/miconexion.php";
-         $q="select * from articulos where nombre=? AND id <> ?";
-         $stmt=mysqli_stmt_init($llave);
-         mysqli_stmt_prepare($stmt, $q);
-         mysqli_stmt_bind_param($stmt, 'si', $nombre, $id);
-         mysqli_stmt_execute($stmt);
-         //Almacenamos el resultado
-         mysqli_stmt_store_result($stmt);
-         if(mysqli_stmt_num_rows($stmt)>0){
-             $errores=true;
-             $_SESSION['errNombre']="*** Error el nombre artículo $nombre YA existe";
-             mysqli_stmt_close($stmt);
-             mysqli_close($llave);
-         }else{
-             mysqli_stmt_close($stmt);
-         }
-     }
+    $nombre = htmlspecialchars(trim($_POST['nombre']));
+    $descripcion = htmlspecialchars(trim($_POST['descripcion']));
+    $stock = (int) htmlspecialchars(trim($_POST['stock']));
+    //Hacemos las validaciones
+    $errores = false;
 
-     if(strlen($descripcion)<10 || strlen($descripcion)>150){
-         $errores=true;
-         $_SESSION['errDescripcion']="*** Error la descripcion debe tener entre 10 y 150 caracteres.";
-     }
-     if($stock<=0){
-         $errores=true;
-         $_SESSION['errStock']="*** Error el stock NO puede ser negativo.";
-     }
-     if($errores){
-         header("Location:update.php?articulo_id=$id");
-         die();
-     }
-     // Todo ha ido bien actualizamos el registro
-     $q="update articulos set nombre=?, descripcion=?, stock=? where id = ?";
-     $stmt=mysqli_stmt_init($llave);
-     mysqli_stmt_prepare($stmt, $q);
-     mysqli_stmt_bind_param($stmt, 'ssii', $nombre, $descripcion, $stock, $id);
-     mysqli_stmt_execute($stmt);
-     mysqli_stmt_close($stmt);
-     mysqli_close($llave);
-     header("Location:read.php");
+    if (strlen($nombre) < 5 || strlen($nombre) > 50) {
+        $errores = true;
+        $_SESSION['errNombre'] = "*** Error el nombre debe tener entre 5 y 50 caracteres.";
+    } else {
+        //comprobaremos que $nombre NO existe en la BB de Datos
+        require_once __DIR__ . "/conexion/miconexion.php";
+        $q = "select * from articulos where nombre=? AND id <> ?";
+        $stmt = mysqli_stmt_init($llave);
+        mysqli_stmt_prepare($stmt, $q);
+        mysqli_stmt_bind_param($stmt, 'si', $nombre, $id);
+        mysqli_stmt_execute($stmt);
+        //Almacenamos el resultado
+        mysqli_stmt_store_result($stmt);
+        if (mysqli_stmt_num_rows($stmt) > 0) {
+            $errores = true;
+            $_SESSION['errNombre'] = "*** Error el nombre artículo $nombre YA existe";
+            mysqli_stmt_close($stmt);
+            mysqli_close($llave);
+        } else {
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    if (strlen($descripcion) < 10 || strlen($descripcion) > 150) {
+        $errores = true;
+        $_SESSION['errDescripcion'] = "*** Error la descripcion debe tener entre 10 y 150 caracteres.";
+    }
+    if ($stock <= 0) {
+        $errores = true;
+        $_SESSION['errStock'] = "*** Error el stock NO puede ser negativo.";
+    }
+    if ($errores) {
+        header("Location:update.php?articulo_id=$id");
+        die();
+    }
+    // Todo ha ido bien actualizamos el registro
+    $q = "update articulos set nombre=?, descripcion=?, stock=? where id = ?";
+    $stmt = mysqli_stmt_init($llave);
+    mysqli_stmt_prepare($stmt, $q);
+    mysqli_stmt_bind_param($stmt, 'ssii', $nombre, $descripcion, $stock, $id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+    mysqli_close($llave);
+    header("Location:read.php");
 }
 
 ?>
@@ -103,16 +103,14 @@ if(isset($_POST['btn_env'])){
     <form method="POST" action="update.php?articulo_id=<?php echo $id ?>">
         <label for="nombre">Nombre:</label>
         <br>
-        <input type="text" value="<?php echo $nom; ?>" 
-        name="nombre" placeholder="Nombre artículo..." id="nombre" style="width:60%" />
+        <input type="text" value="<?php echo $nom; ?>" name="nombre" placeholder="Nombre artículo..." id="nombre" style="width:60%" />
         <?php
         mostrarError('errNombre');
         ?>
         <br>
         <label for="stock">Stock:</label>
         <br>
-        <input type="number" value="<?php echo $sto; ?>"  
-         name="stock" placeholder="Stock artículo..." id="stock" style="width:60%" />
+        <input type="number" value="<?php echo $sto; ?>" name="stock" placeholder="Stock artículo..." id="stock" style="width:60%" />
         <?php
         mostrarError('errStock');
         ?>
