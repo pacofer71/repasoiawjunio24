@@ -1,6 +1,28 @@
 <?php
-session_start();
+if(!isset($_GET['idArticulo'])){
+    header("Location:index.php");
+    die();
+}
 
+$id=(int) $_GET['idArticulo'];
+//intento recuperar el articulo a actualizar, si no existe me voy a index
+require_once __DIR__."/../conexion/conexion.php";
+$q="select * from articulos where id=?";
+$stmt=mysqli_stmt_init($llave);
+mysqli_stmt_prepare($stmt, $q);
+mysqli_stmt_bind_param($stmt, 'i', $id);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_bind_result($stmt, $i, $n, $d, $t, $p);
+if(!mysqli_stmt_fetch($stmt)){
+    mysqli_stmt_close($stmt);
+    mysqli_close($llave);
+    header("Location:index.php");
+    die();
+}
+//Cierro el stmt, la conexion no pues la necesito todavia
+mysqli_stmt_close($stmt);
+
+session_start();
 function pintarErrores($nombre)
 {
     if (isset($_SESSION[$nombre])) {
@@ -8,7 +30,6 @@ function pintarErrores($nombre)
         unset($_SESSION[$nombre]);
     }
 }
-
 if (isset($_POST['btn'])) {
     $nombre = htmlspecialchars(trim($_POST['nombre']));
     $descripcion = htmlspecialchars(trim($_POST['descripcion']));
@@ -16,16 +37,16 @@ if (isset($_POST['btn'])) {
     $tipo = (isset($_POST['tipo'])) ? htmlspecialchars(trim($_POST['tipo'])) : "";
 
     $errores = false;
+
     if (strlen($nombre) < 3 || strlen($nombre) > 40) {
         $_SESSION['err_nombre'] = "*** Error el nombre debe tener entre 3 y 40 caracteres";
         $errores = true;
     }else{
         //comprobaremos que el nombre de articulo no existe
-        require __DIR__."/../conexion/conexion.php";
-        $q="select id from articulos where nombre=?";
+        $q="select id from articulos where nombre=? AND id <> ?";
         $stmt=mysqli_stmt_init($llave);
         mysqli_stmt_prepare($stmt, $q);
-        mysqli_stmt_bind_param($stmt, 's', $nombre);
+        mysqli_stmt_bind_param($stmt, 'si', $nombre, $id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_store_result($stmt);
         if(mysqli_stmt_num_rows($stmt)>0){
@@ -38,11 +59,8 @@ if (isset($_POST['btn'])) {
             //NO cierro la llave pue la puedo seguir necesitando para guardar el articulo
             mysqli_stmt_close($stmt);
         }
-        
-        
-
-
     }
+
     if (strlen($descripcion) < 5 || strlen($descripcion) > 50) {
         $_SESSION['err_descripcion'] = "*** Error la descripcion debe tener entre 5 y 50 caracteres";
         $errores = true;
@@ -55,21 +73,21 @@ if (isset($_POST['btn'])) {
         $_SESSION['err_tipo'] = "*** Error tipo incorrecto o no selecciono ninguno";
         $errores = true;
     }
-    if ($errores) {
-        header("Location:nuevo.php");
+    if($errores){
+        header("Location:update.php?idArticulo=$id");
         die();
     }
-    // Vamos a guardar el articulo pq no hay errores
-    $q="insert into articulos(nombre, descripcion, tipo, precio) values(?,?,?,?)";
+    //Si he llegado aquí todo bien, edito el articulo
+    $q="update articulos set tipo=?, descripcion=?, precio=?, nombre=? where id=?";
     $stmt=mysqli_stmt_init($llave);
     mysqli_stmt_prepare($stmt, $q);
-    mysqli_stmt_bind_param($stmt, 'sssd', $nombre, $descripcion, $tipo, $precio);
+    mysqli_stmt_bind_param($stmt, 'ssdsi', $tipo, $descripcion, $precio, $nombre, $id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
     mysqli_close($llave);
     header("Location:index.php");
-
     
+
 }
 
 ?>
@@ -84,41 +102,42 @@ if (isset($_POST['btn'])) {
 
 <body style="background-color:beige">
     <h3>
-        <center>CREAR ARTICULOS</center>
+        <center>EDITAR ARTICULOS</center>
     </h3>
     <div style="width:40%; margin-left:auto; margin-right:auto; padding:12px; border-style:solid; border-color:gray">
-        <form method="POST" action="nuevo.php">
+        <form method="POST" action="update.php?idArticulo=<?php echo $id ?>">
             <label for="nombre">Nombre</label><br>
-            <input type="text" name="nombre" id="nombre" style="width:100%;">
+            <input type="text" name="nombre" id="nombre" style="width:100%;" value="<?php echo $n; ?>">
             <?php
             pintarErrores('err_nombre');
             ?>
             <br><br>
 
             <label for="precio">Precio (€)</label><br>
-            <input type="number" name="precio" id="precio" step="0.01" style="width:100%;">
+            <input type="number" name="precio" id="precio" step="0.01" style="width:100%;" value="<?php echo $p; ?>">
             <?php
             pintarErrores('err_precio');
             ?>
             <br><br>
 
             <label for="descripcion">Descripcion</label><br>
-            <textarea name="descripcion" id="descipcion" rows='5' style="width:100%;"></textarea>
+            <textarea name="descripcion" id="descipcion" rows='5' style="width:100%;"><?php echo $d; ?></textarea>
             <?php
             pintarErrores('err_descripcion');
             ?>
             <br><br>
 
             <label>Tipo</label><br>
-            <input type="radio" name="tipo" value="digital" id="d"> <label for="d">Digital</label><br>
-            <input type="radio" name="tipo" value="bazar" id="bz"> <label for="bz">Bazar</label><br>
+        
+            <input type="radio" name="tipo" value="digital" id="d" <?php if($t=='digital') echo "checked"; ?> /> <label for="d">Digital</label><br>
+            <input type="radio" name="tipo" value="bazar" id="bz" <?php if($t=='bazar') echo "checked"; ?> /> <label for="bz">Bazar</label><br>
             <?php
             pintarErrores('err_tipo');
             ?>
 
             <br>
-            <input type="submit" value="GUARDAR" name="btn" style="background-color:blue; color:white; padding:4px" />
-            <input type="reset" value="LIMPIAR" style="background-color:orange; color:white; padding:4px" />
+            <input type="submit" value="EDITAR" name="btn" style="background-color:blue; color:white; padding:4px" />
+            <a href="index.php"><button type="button" style="background-color:red; color:white; padding:4px">CANCELAR</button></a>
 
 
         </form>

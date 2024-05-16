@@ -42,7 +42,15 @@ $articulos = mysqli_query($llave, $q);
                 <td>{$item['descripcion']}</td>
                 <td>{$item['precio']}</td>
                 <td style="color:$color;">{$item['tipo']}</td>
-                <td>Botones</td>
+                <td>
+                <form action='borrar.php' method='POST'>
+                <input type="hidden" name='idArticulo' value='{$item['id']}' />
+                <a href="update.php?idArticulo={$item['id']}">
+                <button type="button">EDITAR</button>
+                </a>
+                <button type="submit" onclick="return confirm('¿Borrar Articulo?');">BORRAR</button>
+                </form>
+                </td>
                 </tr>
                 TXT;
             }
